@@ -1,0 +1,2 @@
+import Button from './Button';
+export default function Modal({open,title,children,onClose,onConfirm,confirmText='Confirm'}) { if(!open)return null; return <div className="modal-backdrop"><div className="modal"><h3>{title}</h3><div>{children}</div><div className="modal-actions"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={onConfirm}>{confirmText}</Button></div></div></div>; }
