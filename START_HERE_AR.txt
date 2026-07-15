@@ -1,0 +1,21 @@
+طريقة التشغيل:
+
+1) انسخي ملف .env.example وسمّي النسخة .env
+2) داخل .env ضعي:
+GEMINI_API_KEY=مفتاحك
+GEMINI_MODEL=gemini-flash-latest
+PORT=3001
+
+3) شغلي:
+npm install
+
+4) Terminal أول:
+npm run server
+
+5) Terminal ثانٍ:
+npm run dev
+
+6) افتحي:
+http://localhost:5173
+
+هذه النسخة ترسل ملف PDF نفسه إلى Gemini لفهم النص العربي والإنجليزي والصور والجداول، بدل الاعتماد على استخراج النص العربي المشوّه داخل المتصفح.
