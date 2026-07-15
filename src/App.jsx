@@ -5,6 +5,9 @@ import {
   Plus, Settings, Sparkles, Sun, Upload, X,
 } from 'lucide-react';
 import { analyzePdf, getServerHealth } from './services/api';
+import Onboarding from './pages/Onboarding';
+import { clearProfile, getProfile } from './services/profileStorage';
+import ChatPanel from './components/chat/ChatPanel';
 
 const copy = {
   en: {
@@ -35,8 +38,11 @@ function safeCourses() {
 }
 
 export default function App() {
-  const [user, setUser] = useState(() => localStorage.getItem('spv3_user') || '');
-  const [name, setName] = useState('Reman');
+  const [profile, setProfile] = useState(() => getProfile());
+  const [user, setUser] = useState(() => {
+    const savedProfile = getProfile();
+    return savedProfile?.name || localStorage.getItem('spv3_user') || '';
+  });
   const [lang, setLang] = useState(() => localStorage.getItem('spv3_lang') || 'en');
   const [theme, setTheme] = useState(() => localStorage.getItem('spv3_theme') || 'light');
   const [page, setPage] = useState('dashboard');
@@ -56,9 +62,22 @@ export default function App() {
 
   const readiness = useMemo(() => active ? Math.min(95, 35 + Math.round((active.slides?.length || 0) * 1.5)) : 0, [active]);
 
-  if (!user) return <Login t={t} name={name} setName={setName} onSubmit={() => {
-    const value = name.trim() || 'Student'; localStorage.setItem('spv3_user', value); setUser(value);
-  }} />;
+  if (!profile) {
+    return (
+      <Onboarding
+        onComplete={(newProfile) => {
+          const value = newProfile.name?.trim() || 'Student';
+
+          setProfile(newProfile);
+          setUser(value);
+          localStorage.setItem('spv3_user', value);
+
+          // واجهة الموقع تدعم العربية أو الإنجليزية.
+          setLang(newProfile.language === 'ar' ? 'ar' : 'en');
+        }}
+      />
+    );
+  }
 
   function openCourse(id) { setActiveId(id); setSlideIndex(0); setPage('workspace'); }
   function addCourse(course) { setCourses((current) => [course, ...current]); setActiveId(course.id); setSlideIndex(0); setModal(false); setPage('workspace'); }
@@ -76,22 +95,24 @@ export default function App() {
       <div className="serverStatus"><span className={server.status === 'StudyPilot AI Server Running' ? 'online' : 'offline'} /><div><strong>Nova Server</strong><small>{server.status === 'StudyPilot AI Server Running' ? `${server.model} connected` : 'Offline'}</small></div></div>
     </aside>
     <main>
-      <header className="topbar"><div><strong>{user}</strong><small>AI Student Workspace</small></div><div className="topActions"><select value={lang} onChange={(e) => setLang(e.target.value)}><option value="en">English</option><option value="ar">العربية</option></select><button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? <Moon /> : <Sun />}</button></div></header>
+      <header className="topbar"><div><strong>{profile?.name || user}</strong><small>{profile?.major || 'AI Student'}{profile?.university ? ` • ${profile.university}` : ''}</small></div><div className="topActions"><select value={lang} onChange={(e) => setLang(e.target.value)}><option value="en">English</option><option value="ar">العربية</option></select><button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? <Moon /> : <Sun />}</button></div></header>
       <div className="content">
-        {page === 'dashboard' && <Dashboard t={t} user={user} courses={courses} active={active} readiness={readiness} onAdd={() => setModal(true)} onOpen={openCourse} />}
+        {page === 'dashboard' && <Dashboard t={t} user={profile?.name || user} courses={courses} active={active} readiness={readiness} onAdd={() => setModal(true)} onOpen={openCourse} />}
         {page === 'courses' && <Courses t={t} courses={courses} onAdd={() => setModal(true)} onOpen={openCourse} />}
         {page === 'workspace' && active && <Workspace t={t} course={active} index={slideIndex} setIndex={setSlideIndex} lang={lang} onDelete={() => removeCourse(active.id)} />}
         {page === 'agents' && <Agents t={t} course={active} />}
-        {page === 'settings' && <SettingsPage t={t} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} onLogout={() => { localStorage.removeItem('spv3_user'); setUser(''); }} />}
+        {page === 'settings' && <SettingsPage t={t} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} onLogout={() => {
+          clearProfile();
+          localStorage.removeItem('spv3_user');
+          setProfile(null);
+          setUser('');
+        }} />}
       </div>
     </main>
     {modal && <UploadModal t={t} lang={lang} onClose={() => setModal(false)} onCreate={addCourse} />}
   </div>;
 }
 
-function Login({ t, name, setName, onSubmit }) {
-  return <div className="login"><section><div className="logoLine"><GraduationCap />StudyPilot AI</div><h1>Your Personal Academic Mentor</h1><p>Upload one lecture PDF. Nova coordinates document understanding, bilingual explanations, quizzes, flashcards, and a study plan.</p><div className="pills"><span>Native PDF vision</span><span>Arabic + English</span><span>Multi-agent workflow</span><span>Gemini powered</span></div></section><form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}><span className="eyebrow">AI Agents Bootcamp</span><h2>Enter StudyPilot</h2><label>Student name<input value={name} onChange={(e) => setName(e.target.value)} autoFocus /></label><button className="primary">Continue</button></form></div>;
-}
 
 function Dashboard({ t, user, courses, active, readiness, onAdd, onOpen }) {
   return <section className="stack"><div className="heading"><span className="eyebrow">Study workspace</span><h1>{t.welcome}, {user}</h1><p>{t.subtitle}</p></div><article className="hero"><div><span className="eyebrow">Nova Orchestrator</span><h2>{active?.name || t.noCourses}</h2><p>{active ? `${active.slides.length} ${t.slides}` : 'PDF → Nova → Agents → Learning package'}</p></div><button className="primary" onClick={active ? () => onOpen(active.id) : onAdd}>{active ? t.open : t.add}</button></article><div className="metrics"><Metric icon={<CheckCircle2 />} label="Exam readiness" value={`${readiness}%`} /><Metric icon={<BookOpen />} label="Active courses" value={courses.length} /><Metric icon={<BrainCircuit />} label="AI agents" value="6" /></div><div className="sectionTitle"><div><h2>{t.courses}</h2><p>Your analyzed lecture files.</p></div><button className="secondary" onClick={onAdd}><Plus />{t.add}</button></div>{courses.length ? <div className="courseGrid">{courses.map((course) => <CourseCard key={course.id} course={course} t={t} onOpen={onOpen} />)}</div> : <Empty t={t} onAdd={onAdd} />}</section>;
@@ -102,12 +123,220 @@ function Empty({ t, onAdd }) { return <div className="empty"><Upload /><h2>{t.no
 function CourseCard({ course, t, onOpen }) { return <article className="courseCard"><div className="courseTop"><div className="courseMark">{course.name.slice(0, 2).toUpperCase()}</div><span>AI analyzed</span></div><h3>{course.name}</h3><p>{course.slides.length} {t.slides} · {course.model}</p><button className="secondary" onClick={() => onOpen(course.id)}>{t.open}<ChevronRight /></button></article>; }
 
 function Workspace({ t, course, index, setIndex, lang, onDelete }) {
-  const slide = course.slides[index];
+  const [activeTab, setActiveTab] = useState('slides');
   const [showAnswer, setShowAnswer] = useState(false);
-  useEffect(() => setShowAnswer(false), [index]);
-  if (!slide) return <div className="empty"><h2>Slide unavailable</h2></div>;
+
+  const slide = course?.slides?.[index];
   const arabic = lang === 'ar';
-  return <section className="workspace"><div className="workspaceBar"><div><span className="eyebrow">{course.name}</span><strong>{t.slides} {index + 1}/{course.slides.length}</strong></div><button className="dangerText" onClick={onDelete}>Delete course</button></div><div className="workspaceGrid"><article className="slidePanel"><div className="slideSheet"><span className="slideNumber">{String(slide.pageNumber).padStart(2, '0')}</span><span className="eyebrow">{course.name}</span><h1>{slide.title}</h1><ul>{slide.keyPoints.map((point, i) => <li key={i}>{point}</li>)}</ul></div><div className="slideNav"><button className="secondary" disabled={index === 0} onClick={() => setIndex(index - 1)}><ChevronLeft />{t.previous}</button><div className="dots">{course.slides.map((_, i) => <button key={i} className={i === index ? 'active' : ''} onClick={() => setIndex(i)} />)}</div><button className="primary" disabled={index === course.slides.length - 1} onClick={() => setIndex(index + 1)}>{t.next}<ChevronRight /></button></div></article><aside className="explanation"><div className="agentHeader"><div className="novaAvatar">N</div><div><strong>{t.explanation}</strong><small>Clarity · Explanation Agent</small></div></div><Info title={t.explanation} icon={<Sparkles />}><p className={arabic ? 'rtl' : ''}>{arabic ? slide.explanationArabic : slide.explanationEnglish}</p></Info><Info title={t.keyPoints} icon={<BookOpen />}><ul>{slide.keyPoints.map((point, i) => <li key={i}>{point}</li>)}</ul></Info><Info title={t.example} icon={<FileText />}><p className={arabic ? 'rtl' : ''}>{arabic ? slide.exampleArabic : slide.exampleEnglish}</p></Info><Info title={t.mistake} icon={<BrainCircuit />}><p className={arabic ? 'rtl' : ''}>{arabic ? slide.commonMistakeArabic : slide.commonMistakeEnglish}</p></Info><div className="quiz"><span className="eyebrow">{t.quickCheck}</span><h3>{slide.quickCheck.question}</h3>{slide.quickCheck.options.map((option, i) => <div key={i} className="option">{String.fromCharCode(65 + i)}. {option}</div>)}<button className="secondary full" onClick={() => setShowAnswer(!showAnswer)}>{showAnswer ? t.hide : t.show}</button>{showAnswer && <p className="answer"><CheckCircle2 />{slide.quickCheck.options[slide.quickCheck.correctAnswerIndex]} — {slide.quickCheck.explanation}</p>}</div></aside></div><div className="learningExtras"><Info title={t.summary} icon={<BookOpen />}><p>{lang === 'ar' ? course.summaryArabic : course.summaryEnglish}</p></Info><Info title={t.flashcards} icon={<Languages />}><div className="flashcards">{course.flashcards.map((card, i) => <article key={i}><strong>{card.front}</strong><p>{card.back}</p></article>)}</div></Info><Info title={t.plan} icon={<Play />}><ol>{course.studyPlan.map((item, i) => <li key={i}>{item}</li>)}</ol></Info></div></section>;
+
+  useEffect(() => {
+    setShowAnswer(false);
+  }, [index]);
+
+  useEffect(() => {
+    setActiveTab('slides');
+  }, [course?.id]);
+
+  return (
+    <section className="workspace">
+      <div className="workspaceBar">
+        <div>
+          <span className="eyebrow">{course.name}</span>
+
+          <strong>
+            {activeTab === 'slides'
+              ? `${t.slides} ${index + 1}/${course.slides.length}`
+              : arabic
+                ? 'محادثة المقرر'
+                : 'Course Chat'}
+          </strong>
+        </div>
+
+        <button className="dangerText" onClick={onDelete}>
+          {arabic ? 'حذف المقرر' : 'Delete course'}
+        </button>
+      </div>
+
+      <div className="workspaceTabs" role="tablist">
+        <button
+          className={activeTab === 'slides' ? 'active' : ''}
+          type="button"
+          onClick={() => setActiveTab('slides')}
+        >
+          <FileText />
+          {arabic ? 'الشرائح' : 'Slides'}
+        </button>
+
+        <button
+          className={activeTab === 'chat' ? 'active' : ''}
+          type="button"
+          onClick={() => setActiveTab('chat')}
+        >
+          <BrainCircuit />
+          {arabic ? 'المحادثة' : 'Chat'}
+        </button>
+      </div>
+
+      {activeTab === 'chat' ? (
+        <ChatPanel course={course} language={lang} />
+      ) : !slide ? (
+        <div className="empty">
+          <h2>Slide unavailable</h2>
+        </div>
+      ) : (
+        <>
+          <div className="workspaceGrid">
+            <article className="slidePanel">
+              <div className="slideSheet">
+                <span className="slideNumber">
+                  {String(slide.pageNumber).padStart(2, '0')}
+                </span>
+
+                <span className="eyebrow">{course.name}</span>
+                <h1>{slide.title}</h1>
+
+                <ul>
+                  {slide.keyPoints.map((point, pointIndex) => (
+                    <li key={pointIndex}>{point}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="slideNav">
+                <button
+                  className="secondary"
+                  disabled={index === 0}
+                  onClick={() => setIndex(index - 1)}
+                >
+                  <ChevronLeft />
+                  {t.previous}
+                </button>
+
+                <div className="dots">
+                  {course.slides.map((_, slideNumber) => (
+                    <button
+                      key={slideNumber}
+                      className={slideNumber === index ? 'active' : ''}
+                      onClick={() => setIndex(slideNumber)}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  className="primary"
+                  disabled={index === course.slides.length - 1}
+                  onClick={() => setIndex(index + 1)}
+                >
+                  {t.next}
+                  <ChevronRight />
+                </button>
+              </div>
+            </article>
+
+            <aside className="explanation">
+              <div className="agentHeader">
+                <div className="novaAvatar">N</div>
+
+                <div>
+                  <strong>{t.explanation}</strong>
+                  <small>Clarity · Explanation Agent</small>
+                </div>
+              </div>
+
+              <Info title={t.explanation} icon={<Sparkles />}>
+                <p className={arabic ? 'rtl' : ''}>
+                  {arabic
+                    ? slide.explanationArabic
+                    : slide.explanationEnglish}
+                </p>
+              </Info>
+
+              <Info title={t.keyPoints} icon={<BookOpen />}>
+                <ul>
+                  {slide.keyPoints.map((point, pointIndex) => (
+                    <li key={pointIndex}>{point}</li>
+                  ))}
+                </ul>
+              </Info>
+
+              <Info title={t.example} icon={<FileText />}>
+                <p className={arabic ? 'rtl' : ''}>
+                  {arabic ? slide.exampleArabic : slide.exampleEnglish}
+                </p>
+              </Info>
+
+              <Info title={t.mistake} icon={<BrainCircuit />}>
+                <p className={arabic ? 'rtl' : ''}>
+                  {arabic
+                    ? slide.commonMistakeArabic
+                    : slide.commonMistakeEnglish}
+                </p>
+              </Info>
+
+              <div className="quiz">
+                <span className="eyebrow">{t.quickCheck}</span>
+                <h3>{slide.quickCheck.question}</h3>
+
+                {slide.quickCheck.options.map((option, optionIndex) => (
+                  <div key={optionIndex} className="option">
+                    {String.fromCharCode(65 + optionIndex)}. {option}
+                  </div>
+                ))}
+
+                <button
+                  className="secondary full"
+                  onClick={() => setShowAnswer((current) => !current)}
+                >
+                  {showAnswer ? t.hide : t.show}
+                </button>
+
+                {showAnswer && (
+                  <p className="answer">
+                    <CheckCircle2 />
+                    {
+                      slide.quickCheck.options[
+                        slide.quickCheck.correctAnswerIndex
+                      ]
+                    }{' '}
+                    — {slide.quickCheck.explanation}
+                  </p>
+                )}
+              </div>
+            </aside>
+          </div>
+
+          <div className="learningExtras">
+            <Info title={t.summary} icon={<BookOpen />}>
+              <p>
+                {lang === 'ar'
+                  ? course.summaryArabic
+                  : course.summaryEnglish}
+              </p>
+            </Info>
+
+            <Info title={t.flashcards} icon={<Languages />}>
+              <div className="flashcards">
+                {course.flashcards.map((card, cardIndex) => (
+                  <article key={cardIndex}>
+                    <strong>{card.front}</strong>
+                    <p>{card.back}</p>
+                  </article>
+                ))}
+              </div>
+            </Info>
+
+            <Info title={t.plan} icon={<Play />}>
+              <ol>
+                {course.studyPlan.map((item, itemIndex) => (
+                  <li key={itemIndex}>{item}</li>
+                ))}
+              </ol>
+            </Info>
+          </div>
+        </>
+      )}
+    </section>
+  );
 }
 function Info({ title, icon, children }) { return <article className="info"><div className="infoTitle">{icon}<h3>{title}</h3></div>{children}</article>; }
 
