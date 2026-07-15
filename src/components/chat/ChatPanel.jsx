@@ -1,46 +1,73 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Bot, Send, Sparkles, Trash2, User } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  BookOpen,
+  Bot,
+  CheckCircle2,
+  FileText,
+  GraduationCap,
+  Lightbulb,
+  Send,
+  Sparkles,
+  Target,
+  Trash2,
+  User,
+} from 'lucide-react';
+
+import { askNovaAboutCourse } from '../../services/chatService';
 
 const QUICK_ACTIONS = [
   {
-    id: 'explain',
-    label: 'Explain this slide',
-    buildPrompt: (course) =>
-      `Explain the current slide from ${course?.name || 'this course'} in a simple way.`,
-  },
-  {
-    id: 'summary',
-    label: 'Summarize the course',
-    buildPrompt: (course) =>
-      `Summarize the most important ideas in ${course?.name || 'this course'}.`,
+    id: 'simple',
+    labelEn: 'Explain simply',
+    labelAr: 'اشرح ببساطة',
+    promptEn: 'Explain the most important concept in a very simple way.',
+    promptAr: 'اشرح أهم مفهوم في المقرر بطريقة بسيطة جدًا.',
   },
   {
     id: 'example',
-    label: 'Give me an example',
-    buildPrompt: (course) =>
-      `Give me a clear practical example related to ${course?.name || 'this course'}.`,
+    labelEn: 'Give another example',
+    labelAr: 'أعطني مثالًا آخر',
+    promptEn: 'Give me another clear example from this course.',
+    promptAr: 'أعطني مثالًا آخر واضحًا من هذا المقرر.',
+  },
+  {
+    id: 'exam',
+    labelEn: 'Exam-focused review',
+    labelAr: 'مراجعة للاختبار',
+    promptEn: 'Explain the most important exam points from this course.',
+    promptAr: 'اشرح أهم النقاط المتوقعة في الاختبار من هذا المقرر.',
   },
   {
     id: 'quiz',
-    label: 'Quiz me',
-    buildPrompt: (course) =>
-      `Ask me one multiple-choice question about ${course?.name || 'this course'}.`,
+    labelEn: 'Quiz me',
+    labelAr: 'اختبرني',
+    promptEn: 'Quiz me on one important concept from this course.',
+    promptAr: 'اختبرني في مفهوم مهم من هذا المقرر.',
   },
 ];
 
-function makeInitialMessages(course, language) {
-  const isArabic = language === 'ar';
+function getStoredProfile() {
+  try {
+    const value = localStorage.getItem('studypilot_profile');
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
+  }
+}
 
-  return [
-    {
-      id: `nova-welcome-${course?.id || 'course'}`,
-      role: 'assistant',
-      text: isArabic
-        ? `مرحبًا! أنا Nova. اسأليني أي سؤال عن مقرر ${course?.name || 'هذا المقرر'}.`
-        : `Hi! I’m Nova. Ask me anything about ${course?.name || 'this course'}.`,
-      createdAt: new Date().toISOString(),
-    },
-  ];
+function makeWelcomeMessage(course, language) {
+  const arabic = language === 'ar';
+
+  return {
+    id: `nova-welcome-${course?.id || 'course'}`,
+    role: 'assistant',
+    text: arabic
+      ? `مرحبًا! أنا Nova، مدرسك الشخصي لمقرر ${course?.name || 'هذا المقرر'}. اسأليني عن أي مفهوم وسأشرحه خطوة بخطوة.`
+      : `Hi! I’m Nova, your personal tutor for ${course?.name || 'this course'}. Ask me about any concept and I’ll explain it step by step.`,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 function safeReadMessages(key, fallback) {
@@ -55,75 +82,44 @@ function safeReadMessages(key, fallback) {
   }
 }
 
-function buildLocalReply({ question, course, language }) {
-  const isArabic = language === 'ar';
-  const normalized = question.toLowerCase();
-
-  if (normalized.includes('quiz') || normalized.includes('اختبر')) {
-    return isArabic
-      ? `سؤال سريع عن ${course?.name || 'المقرر'}: ما الفكرة الأساسية التي لاحظتِ تكرارها في الشرائح؟`
-      : `Quick check for ${course?.name || 'the course'}: What main idea appears repeatedly across the slides?`;
-  }
-
-  if (normalized.includes('summary') || normalized.includes('لخص')) {
-    const summary = isArabic
-      ? course?.summaryArabic
-      : course?.summaryEnglish;
-
-    return (
-      summary ||
-      (isArabic
-        ? 'الملخص غير متاح بعد. ارفعي ملف PDF وحلليه بواسطة Nova أولًا.'
-        : 'A course summary is not available yet. Upload and analyze a PDF first.')
-    );
-  }
-
-  if (normalized.includes('example') || normalized.includes('مثال')) {
-    const example = isArabic
-      ? course?.slides?.[0]?.exampleArabic
-      : course?.slides?.[0]?.exampleEnglish;
-
-    return (
-      example ||
-      (isArabic
-        ? 'لا يوجد مثال جاهز بعد، لكن بعد تحليل الملف ستظهر أمثلة مرتبطة بالمحتوى.'
-        : 'No generated example is available yet. Analyze the PDF to create course-based examples.')
-    );
-  }
-
-  const firstSlide = course?.slides?.[0];
-  const explanation = isArabic
-    ? firstSlide?.explanationArabic
-    : firstSlide?.explanationEnglish;
-
+function TutorSection({ icon, title, children, className = '' }) {
   return (
-    explanation ||
-    (isArabic
-      ? 'هذه نسخة المحادثة المحلية الأولى. في الخطوة التالية سنربطها بخادم Nova ليجيب اعتمادًا على ملف المقرر.'
-      : 'This is the first local chat version. Next, we will connect it to Nova Server so answers come from the uploaded course PDF.')
+    <section className={`novaTutorSection ${className}`}>
+      <header>
+        {icon}
+        <h3>{title}</h3>
+      </header>
+
+      <div>{children}</div>
+    </section>
   );
 }
 
 export default function ChatPanel({ course, language = 'en' }) {
+  const arabic = language === 'ar';
+
   const storageKey = useMemo(
     () => `spv3_chat_${course?.id || 'unknown'}`,
     [course?.id],
   );
 
-  const initialMessages = useMemo(
-    () => makeInitialMessages(course, language),
+  const welcomeMessage = useMemo(
+    () => makeWelcomeMessage(course, language),
     [course?.id, course?.name, language],
   );
 
   const [messages, setMessages] = useState(() =>
-    safeReadMessages(storageKey, initialMessages),
+    safeReadMessages(storageKey, [welcomeMessage]),
   );
+
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [revealedAnswers, setRevealedAnswers] = useState({});
 
   useEffect(() => {
-    setMessages(safeReadMessages(storageKey, initialMessages));
-  }, [storageKey, initialMessages]);
+    setMessages(safeReadMessages(storageKey, [welcomeMessage]));
+    setRevealedAnswers({});
+  }, [storageKey, welcomeMessage]);
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(messages));
@@ -133,6 +129,8 @@ export default function ChatPanel({ course, language = 'en' }) {
     const text = (customText ?? input).trim();
 
     if (!text || sending) return;
+
+    const previousMessages = messages;
 
     const userMessage = {
       id: `user-${Date.now()}`,
@@ -145,27 +143,61 @@ export default function ChatPanel({ course, language = 'en' }) {
     setInput('');
     setSending(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const assistantMessage = {
-      id: `nova-${Date.now()}`,
-      role: 'assistant',
-      text: buildLocalReply({
-        question: text,
+    try {
+      const result = await askNovaAboutCourse({
         course,
-        language,
-      }),
-      createdAt: new Date().toISOString(),
-    };
+        question: text,
+        language: arabic ? 'ar' : 'bilingual',
+        conversationHistory: previousMessages,
+        profile: getStoredProfile(),
+      });
 
-    setMessages((current) => [...current, assistantMessage]);
-    setSending(false);
+      const assistantMessage = {
+        id: `nova-${Date.now()}`,
+        role: 'assistant',
+        ...result,
+        text: [
+          result.mainIdea,
+          result.detailedExplanation,
+          result.example,
+        ]
+          .filter(Boolean)
+          .join('\n\n'),
+        createdAt: new Date().toISOString(),
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
+    } catch (error) {
+      setMessages((current) => [
+        ...current,
+        {
+          id: `nova-error-${Date.now()}`,
+          role: 'assistant',
+          text:
+            error instanceof Error
+              ? error.message
+              : 'Nova could not answer this question.',
+          isError: true,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setSending(false);
+    }
   }
 
   function clearChat() {
-    const resetMessages = makeInitialMessages(course, language);
-    setMessages(resetMessages);
-    localStorage.setItem(storageKey, JSON.stringify(resetMessages));
+    const reset = [makeWelcomeMessage(course, language)];
+    setMessages(reset);
+    setRevealedAnswers({});
+    localStorage.setItem(storageKey, JSON.stringify(reset));
+  }
+
+  function toggleAnswer(messageId) {
+    setRevealedAnswers((current) => ({
+      ...current,
+      [messageId]: !current[messageId],
+    }));
   }
 
   function handleSubmit(event) {
@@ -182,23 +214,19 @@ export default function ChatPanel({ course, language = 'en' }) {
           </div>
 
           <div>
-            <span className="eyebrow">Chat with Course</span>
-            <h2>Nova</h2>
+            <span className="eyebrow">Nova Tutor v2</span>
+            <h2>{arabic ? 'اسأل Nova' : 'Chat with Nova'}</h2>
             <p>
-              {language === 'ar'
-                ? `اسألي أي سؤال عن ${course?.name || 'هذا المقرر'}`
-                : `Ask anything about ${course?.name || 'this course'}`}
+              {arabic
+                ? `شرح مخصص اعتمادًا على مقرر ${course?.name || ''}`
+                : `Personalized tutoring grounded in ${course?.name || 'your course'}`}
             </p>
           </div>
         </div>
 
-        <button
-          className="secondary"
-          type="button"
-          onClick={clearChat}
-        >
+        <button className="secondary" type="button" onClick={clearChat}>
           <Trash2 />
-          {language === 'ar' ? 'مسح المحادثة' : 'Clear chat'}
+          {arabic ? 'مسح المحادثة' : 'Clear chat'}
         </button>
       </header>
 
@@ -207,11 +235,13 @@ export default function ChatPanel({ course, language = 'en' }) {
           <button
             key={action.id}
             type="button"
-            onClick={() => sendMessage(action.buildPrompt(course))}
+            onClick={() =>
+              sendMessage(arabic ? action.promptAr : action.promptEn)
+            }
             disabled={sending}
           >
             <Sparkles />
-            {action.label}
+            {arabic ? action.labelAr : action.labelEn}
           </button>
         ))}
       </div>
@@ -230,12 +260,143 @@ export default function ChatPanel({ course, language = 'en' }) {
               <strong>
                 {message.role === 'assistant'
                   ? 'Nova'
-                  : language === 'ar'
+                  : arabic
                     ? 'أنتِ'
                     : 'You'}
               </strong>
 
-              <p>{message.text}</p>
+              {message.isError ? (
+                <p className="courseChatError">{message.text}</p>
+              ) : message.mainIdea ? (
+                <div className="novaTutorCards">
+                  <TutorSection
+                    icon={<Lightbulb />}
+                    title={arabic ? 'الفكرة الأساسية' : 'Main Idea'}
+                    className="mainIdea"
+                  >
+                    <p>{message.mainIdea}</p>
+                  </TutorSection>
+
+                  <TutorSection
+                    icon={<BookOpen />}
+                    title={arabic ? 'الشرح بالتفصيل' : 'Detailed Explanation'}
+                  >
+                    <p>{message.detailedExplanation}</p>
+                  </TutorSection>
+
+                  <TutorSection
+                    icon={<Sparkles />}
+                    title={arabic ? 'مثال' : 'Example'}
+                  >
+                    <p>{message.example}</p>
+                  </TutorSection>
+
+                  <TutorSection
+                    icon={<AlertTriangle />}
+                    title={arabic ? 'خطأ شائع' : 'Common Mistake'}
+                    className="warning"
+                  >
+                    <p>{message.commonMistake}</p>
+                  </TutorSection>
+
+                  <TutorSection
+                    icon={<GraduationCap />}
+                    title={arabic ? 'نصيحة للاختبار' : 'Exam Tip'}
+                    className="examTip"
+                  >
+                    <p>{message.examTip}</p>
+                  </TutorSection>
+
+                  <TutorSection
+                    icon={<CheckCircle2 />}
+                    title={arabic ? 'سؤال سريع' : 'Quick Quiz'}
+                    className="quizSection"
+                  >
+                    <h4>{message.quickQuiz?.question}</h4>
+
+                    <div className="novaTutorOptions">
+                      {message.quickQuiz?.options?.map(
+                        (option, optionIndex) => (
+                          <div key={optionIndex}>
+                            {String.fromCharCode(65 + optionIndex)}. {option}
+                          </div>
+                        ),
+                      )}
+                    </div>
+
+                    <button
+                      className="secondary"
+                      type="button"
+                      onClick={() => toggleAnswer(message.id)}
+                    >
+                      {revealedAnswers[message.id]
+                        ? arabic
+                          ? 'إخفاء الإجابة'
+                          : 'Hide answer'
+                        : arabic
+                          ? 'إظهار الإجابة'
+                          : 'Show answer'}
+                    </button>
+
+                    {revealedAnswers[message.id] && (
+                      <div className="novaTutorAnswer">
+                        <strong>
+                          {message.quickQuiz.options[
+                            message.quickQuiz.correctAnswerIndex
+                          ]}
+                        </strong>
+
+                        <p>{message.quickQuiz.explanation}</p>
+                      </div>
+                    )}
+                  </TutorSection>
+
+                  <TutorSection
+                    icon={<ArrowRight />}
+                    title={arabic ? 'الخطوة التالية' : 'Next Step'}
+                    className="nextStep"
+                  >
+                    <p>{message.nextStep}</p>
+                  </TutorSection>
+                </div>
+              ) : (
+                <p>{message.text}</p>
+              )}
+
+              {Array.isArray(message.sources) &&
+                message.sources.length > 0 && (
+                  <div className="courseChatSources">
+                    <strong>{arabic ? 'المصادر' : 'Sources'}</strong>
+
+                    <div>
+                      {message.sources.map((source, sourceIndex) => (
+                        <span key={`${source.pageNumber}-${sourceIndex}`}>
+                          <FileText />
+                          {arabic ? 'الشريحة' : 'Slide'} {source.pageNumber}:{' '}
+                          {source.title}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {Array.isArray(message.suggestedFollowUps) &&
+                message.suggestedFollowUps.length > 0 && (
+                  <div className="courseChatFollowUps">
+                    {message.suggestedFollowUps.map(
+                      (suggestion, suggestionIndex) => (
+                        <button
+                          key={`${suggestion}-${suggestionIndex}`}
+                          type="button"
+                          onClick={() => sendMessage(suggestion)}
+                          disabled={sending}
+                        >
+                          {suggestion}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                )}
             </div>
           </article>
         ))}
@@ -249,9 +410,9 @@ export default function ChatPanel({ course, language = 'en' }) {
             <div className="courseChatBubble">
               <strong>Nova</strong>
               <p className="courseChatTyping">
-                {language === 'ar'
-                  ? 'Nova تكتب الآن...'
-                  : 'Nova is typing...'}
+                {arabic
+                  ? 'Nova تبني الشرح خطوة بخطوة...'
+                  : 'Nova is building your explanation step by step...'}
               </p>
             </div>
           </article>
@@ -263,9 +424,9 @@ export default function ChatPanel({ course, language = 'en' }) {
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder={
-            language === 'ar'
-              ? 'اكتبي سؤالك عن المقرر...'
-              : 'Ask a question about this course...'
+            arabic
+              ? 'اسألي عن مفهوم، شريحة، مثال، أو مراجعة للاختبار...'
+              : 'Ask about a concept, slide, example, or exam review...'
           }
           rows="3"
         />
@@ -276,7 +437,7 @@ export default function ChatPanel({ course, language = 'en' }) {
           disabled={!input.trim() || sending}
         >
           <Send />
-          {language === 'ar' ? 'إرسال' : 'Send'}
+          {arabic ? 'إرسال' : 'Send'}
         </button>
       </form>
     </section>

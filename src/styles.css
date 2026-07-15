@@ -208,3 +208,138 @@
     flex:1;
   }
 }
+
+/* Nova grounded chat additions */
+.courseChatSources{
+  display:grid;
+  gap:8px;
+  margin-top:13px;
+  padding-top:12px;
+  border-top:1px solid var(--border);
+}
+.courseChatSources>strong{
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.courseChatSources>div{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.courseChatSources span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 9px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--soft);
+  color:var(--muted);
+  font-size:11px;
+}
+.courseChatSources svg{
+  width:13px;
+}
+.courseChatFollowUps{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:12px;
+}
+.courseChatFollowUps button{
+  padding:7px 9px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--surface);
+  color:var(--primary);
+  font-size:11px;
+}
+.courseChatFollowUps button:hover{
+  border-color:var(--primary);
+}
+.courseChatError{
+  color:var(--danger)!important;
+}
+/* Nova Tutor v2 cards */
+.novaTutorCards{
+  display:grid;
+  gap:11px;
+  margin-top:10px;
+}
+.novaTutorSection{
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:15px;
+  background:var(--surface);
+}
+.novaTutorSection>header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 13px;
+  border-bottom:1px solid var(--border);
+  background:var(--soft);
+}
+.novaTutorSection>header svg{
+  width:17px;
+  color:var(--primary);
+}
+.novaTutorSection>header h3{
+  margin:0;
+  font-size:13px;
+}
+.novaTutorSection>div{
+  padding:13px;
+}
+.novaTutorSection p{
+  margin:0;
+  line-height:1.8;
+  white-space:pre-wrap;
+}
+.novaTutorSection.mainIdea{
+  border-color:color-mix(in srgb,var(--primary) 38%,var(--border));
+}
+.novaTutorSection.warning>header{
+  background:color-mix(in srgb,#e59a45 12%,var(--surface));
+}
+.novaTutorSection.warning>header svg{
+  color:#d48431;
+}
+.novaTutorSection.examTip>header{
+  background:color-mix(in srgb,#7f69d9 12%,var(--surface));
+}
+.novaTutorSection.examTip>header svg{
+  color:#7f69d9;
+}
+.novaTutorSection.nextStep>header{
+  background:color-mix(in srgb,#55a66b 12%,var(--surface));
+}
+.novaTutorSection.nextStep>header svg{
+  color:#55a66b;
+}
+.novaTutorSection.quizSection h4{
+  margin:0 0 12px;
+  line-height:1.6;
+}
+.novaTutorOptions{
+  display:grid;
+  gap:7px;
+  margin-bottom:12px;
+}
+.novaTutorOptions div{
+  padding:9px 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--soft);
+}
+.novaTutorAnswer{
+  margin-top:11px;
+  padding:11px;
+  border-radius:11px;
+  background:color-mix(in srgb,#55a66b 12%,var(--surface));
+}
+.novaTutorAnswer p{
+  margin-top:6px;
+}

@@ -150,6 +150,154 @@ const responseSchema = {
   ],
 };
 
+
+const chatResponseSchema = {
+  type: 'OBJECT',
+  properties: {
+    mainIdea: { type: 'STRING' },
+    detailedExplanation: { type: 'STRING' },
+    example: { type: 'STRING' },
+    commonMistake: { type: 'STRING' },
+    examTip: { type: 'STRING' },
+    quickQuiz: {
+      type: 'OBJECT',
+      properties: {
+        question: { type: 'STRING' },
+        options: {
+          type: 'ARRAY',
+          items: { type: 'STRING' },
+          minItems: 4,
+          maxItems: 4,
+        },
+        correctAnswerIndex: {
+          type: 'INTEGER',
+          minimum: 0,
+          maximum: 3,
+        },
+        explanation: { type: 'STRING' },
+      },
+      required: [
+        'question',
+        'options',
+        'correctAnswerIndex',
+        'explanation',
+      ],
+    },
+    nextStep: { type: 'STRING' },
+    sources: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          pageNumber: { type: 'INTEGER' },
+          title: { type: 'STRING' },
+        },
+        required: ['pageNumber', 'title'],
+      },
+    },
+    suggestedFollowUps: {
+      type: 'ARRAY',
+      items: { type: 'STRING' },
+    },
+  },
+  required: [
+    'mainIdea',
+    'detailedExplanation',
+    'example',
+    'commonMistake',
+    'examTip',
+    'quickQuiz',
+    'nextStep',
+    'sources',
+    'suggestedFollowUps',
+  ],
+};
+
+function buildCourseChatContext(course) {
+  const slides = Array.isArray(course?.slides)
+    ? course.slides.slice(0, 30)
+    : [];
+
+  return {
+    courseName: String(course?.name || 'Untitled course').slice(0, 140),
+    summaryEnglish: String(course?.summaryEnglish || '').slice(0, 5000),
+    summaryArabic: String(course?.summaryArabic || '').slice(0, 5000),
+    slides: slides.map((slide, index) => ({
+      pageNumber: Number(slide?.pageNumber) || index + 1,
+      title: String(slide?.title || `Slide ${index + 1}`).slice(0, 300),
+      keyPoints: Array.isArray(slide?.keyPoints)
+        ? slide.keyPoints.slice(0, 8).map((point) => String(point).slice(0, 800))
+        : [],
+      explanationEnglish: String(slide?.explanationEnglish || '').slice(0, 2500),
+      explanationArabic: String(slide?.explanationArabic || '').slice(0, 2500),
+      exampleEnglish: String(slide?.exampleEnglish || '').slice(0, 1500),
+      exampleArabic: String(slide?.exampleArabic || '').slice(0, 1500),
+    })),
+  };
+}
+
+function sanitizeChatResult(data) {
+  const sources = Array.isArray(data?.sources)
+    ? data.sources
+        .filter((source) => source && typeof source === 'object')
+        .slice(0, 6)
+        .map((source) => ({
+          pageNumber: Number(source.pageNumber) || 1,
+          title: String(source.title || 'Course slide').slice(0, 240),
+        }))
+    : [];
+
+  const options =
+    Array.isArray(data?.quickQuiz?.options) &&
+    data.quickQuiz.options.length === 4
+      ? data.quickQuiz.options.map((option) =>
+          String(option).slice(0, 500),
+        )
+      : ['Option A', 'Option B', 'Option C', 'Option D'];
+
+  const correctAnswerIndex =
+    Number.isInteger(data?.quickQuiz?.correctAnswerIndex)
+      ? Math.max(0, Math.min(3, data.quickQuiz.correctAnswerIndex))
+      : 0;
+
+  return {
+    mainIdea:
+      String(data?.mainIdea || '').trim() ||
+      'The uploaded material does not provide enough information for a clear main idea.',
+    detailedExplanation:
+      String(data?.detailedExplanation || '').trim() ||
+      'A detailed explanation could not be generated from the available course content.',
+    example:
+      String(data?.example || '').trim() ||
+      'No supported example was found in the uploaded material.',
+    commonMistake:
+      String(data?.commonMistake || '').trim() ||
+      'No specific common mistake was identified from the course content.',
+    examTip:
+      String(data?.examTip || '').trim() ||
+      'Focus on the definitions, relationships, and examples shown in the lecture.',
+    quickQuiz: {
+      question:
+        String(data?.quickQuiz?.question || '').trim() ||
+        'Which statement best matches the main idea?',
+      options,
+      correctAnswerIndex,
+      explanation:
+        String(data?.quickQuiz?.explanation || '').trim() ||
+        'Review the main idea and compare it with each option.',
+    },
+    nextStep:
+      String(data?.nextStep || '').trim() ||
+      'Review the cited slides, then ask Nova for another example.',
+    sources,
+    suggestedFollowUps: Array.isArray(data?.suggestedFollowUps)
+      ? data.suggestedFollowUps
+          .slice(0, 4)
+          .map((item) => String(item).slice(0, 220))
+      : [],
+  };
+}
+
 async function analyzePdfWithModel({ model, file, courseName, examDate, language }) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(API_KEY)}`;
   const response = await fetch(endpoint, {
@@ -253,6 +401,231 @@ app.post('/api/analyze-pdf', upload.single('pdf'), async (req, res) => {
   } catch (error) {
     console.error('PDF analysis failed:', error);
     return jsonError(res, error?.status || 500, error?.message || 'Nova failed to analyze the PDF.');
+  }
+});
+
+
+app.post('/api/chat-course', async (req, res) => {
+  try {
+    if (!API_KEY) {
+      return jsonError(
+        res,
+        500,
+        'GEMINI_API_KEY is missing from .env.',
+      );
+    }
+
+    const question = String(req.body?.question || '').trim();
+
+    const language = ['ar', 'en', 'bilingual'].includes(
+      req.body?.language,
+    )
+      ? req.body.language
+      : 'bilingual';
+
+    const profile =
+      req.body?.profile && typeof req.body.profile === 'object'
+        ? req.body.profile
+        : {};
+
+    const conversationHistory = Array.isArray(
+      req.body?.conversationHistory,
+    )
+      ? req.body.conversationHistory
+          .slice(-10)
+          .filter(
+            (message) =>
+              message &&
+              ['user', 'assistant'].includes(message.role) &&
+              typeof message.text === 'string',
+          )
+          .map((message) => ({
+            role: message.role,
+            text: message.text.slice(0, 4000),
+          }))
+      : [];
+
+    if (!question) {
+      return jsonError(
+        res,
+        400,
+        'A course question is required.',
+      );
+    }
+
+    if (question.length > 4000) {
+      return jsonError(res, 400, 'The question is too long.');
+    }
+
+    const context = buildCourseChatContext(req.body?.course);
+
+    if (!context.slides.length) {
+      return jsonError(
+        res,
+        400,
+        'The selected course has no analyzed slides.',
+      );
+    }
+
+    const languageRule =
+      language === 'ar'
+        ? 'Answer in clear Arabic. Keep useful English technical terms in parentheses.'
+        : language === 'en'
+          ? 'Answer in clear English.'
+          : 'Answer in the same language as the student. When helpful, include concise Arabic and English technical terminology.';
+
+    const learnerContext = {
+      name: String(profile?.name || 'Student').slice(0, 100),
+      university: String(profile?.university || '').slice(0, 150),
+      major: String(profile?.major || '').slice(0, 150),
+      level: String(profile?.level || '').slice(0, 100),
+      preferredLanguage: String(
+        profile?.language || language,
+      ).slice(0, 50),
+      dailyStudyTime: String(
+        profile?.dailyStudyTime || '',
+      ).slice(0, 100),
+    };
+
+    const prompt = `
+You are Nova, the personal AI tutor inside StudyPilot AI.
+
+You are not a general chatbot.
+You are an expert university tutor who teaches patiently, clearly, and step by step.
+
+GROUNDING RULES
+- Use only the supplied uploaded-course context.
+- Never invent facts that are not supported by the course.
+- If the uploaded material does not contain enough information, say so clearly.
+- Cite only page numbers that exist in the supplied course context.
+- Use the conversation history to understand references such as "it", "that concept", or "explain it more simply".
+
+LEARNER PROFILE
+${JSON.stringify(learnerContext)}
+
+LANGUAGE RULE
+${languageRule}
+
+TEACHING STYLE
+- Start with the simplest useful idea.
+- Build the explanation step by step.
+- Connect related concepts.
+- Use friendly, natural language.
+- Avoid robotic or overly formal wording.
+- Adapt the depth to the learner's academic level.
+- Make the answer useful for exam preparation.
+- Keep each section focused and readable.
+
+RETURN THESE SECTIONS
+1. Main Idea
+   One short, simple paragraph.
+
+2. Detailed Explanation
+   A clear step-by-step explanation that connects the concepts.
+
+3. Example
+   One realistic or course-relevant example.
+
+4. Common Mistake
+   One mistake students may make and how to avoid it.
+
+5. Exam Tip
+   The exact point the student should remember for an exam.
+
+6. Quick Quiz
+   One multiple-choice question with exactly four options.
+   Include the correct answer index and an explanation, but the interface may hide it until the student asks.
+
+7. Next Step
+   Recommend the most useful concept or slide to study next.
+
+8. Sources
+   Cite the most relevant real slide page numbers and titles.
+
+9. Suggested Follow-ups
+   Provide two to four short follow-up questions the student can click.
+
+COURSE CONTEXT
+${JSON.stringify(context)}
+
+RECENT CONVERSATION
+${JSON.stringify(conversationHistory)}
+
+STUDENT QUESTION
+${question}
+`;
+
+    const model = await resolveModel();
+
+    const endpoint =
+      `https://generativelanguage.googleapis.com/v1beta/models/` +
+      `${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(API_KEY)}`;
+
+    const apiResponse = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: chatResponseSchema,
+        },
+      }),
+    });
+
+    const payload = await apiResponse.json().catch(() => ({}));
+
+    if (!apiResponse.ok) {
+      return jsonError(
+        res,
+        apiResponse.status,
+        payload?.error?.message ||
+          `Gemini chat request failed (${apiResponse.status}).`,
+      );
+    }
+
+    const raw =
+      payload?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!raw) {
+      return jsonError(
+        res,
+        502,
+        'Gemini returned an empty chat response.',
+      );
+    }
+
+    let parsed;
+
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return jsonError(
+        res,
+        502,
+        'Gemini returned invalid chat JSON.',
+      );
+    }
+
+    return res.json({
+      success: true,
+      model,
+      result: sanitizeChatResult(parsed),
+    });
+  } catch (error) {
+    console.error('Course chat failed:', error);
+
+    return jsonError(
+      res,
+      error?.status || 500,
+      error?.message ||
+        'Nova could not answer the course question.',
+    );
   }
 });
 
