@@ -52,7 +52,7 @@ export default function App() {
   const [slideIndex, setSlideIndex] = useState(0);
   const [modal, setModal] = useState(false);
   const [server, setServer] = useState({ status: 'checking' });
-  const t = copy[lang];
+  const t = copy[lang] || copy.en;
   const active = courses.find((course) => course.id === activeId) || courses[0] || null;
 
   useEffect(() => { localStorage.setItem('spv3_courses', JSON.stringify(courses)); }, [courses]);

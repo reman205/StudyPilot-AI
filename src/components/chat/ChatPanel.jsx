@@ -153,18 +153,20 @@ export default function ChatPanel({ course, language = 'en' }) {
       });
 
       const assistantMessage = {
-        id: `nova-${Date.now()}`,
-        role: 'assistant',
-        ...result,
-        text: [
-          result.mainIdea,
-          result.detailedExplanation,
-          result.example,
-        ]
-          .filter(Boolean)
-          .join('\n\n'),
-        createdAt: new Date().toISOString(),
-      };
+  id: `nova-${Date.now()}`,
+  role: 'assistant',
+  ...result,
+  text:
+    result.text ||
+    [
+      result.mainIdea,
+      result.detailedExplanation,
+      result.example,
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
+  createdAt: new Date().toISOString(),
+};
 
       setMessages((current) => [...current, assistantMessage]);
     } catch (error) {

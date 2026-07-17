@@ -76,11 +76,21 @@ export async function askNovaAboutCourse({
     );
   }
 
-  if (!payload?.result?.mainIdea) {
-    throw new Error(
-      'Nova did not return a valid tutor response.',
-    );
-  }
+  const result = payload?.result;
 
-  return payload.result;
+const isFullTutorResponse =
+  typeof result?.mainIdea === 'string' &&
+  typeof result?.detailedExplanation === 'string';
+
+const isFollowUpResponse =
+  typeof result?.text === 'string' &&
+  result.text.trim().length > 0;
+
+if (!isFullTutorResponse && !isFollowUpResponse) {
+  throw new Error(
+    'Nova did not return a valid tutor response.',
+  );
+}
+
+return result;
 }
