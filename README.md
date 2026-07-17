@@ -1,17 +1,73 @@
-# StudyPilot AI V3
+# 🎓 StudyPilot AI
 
-A stable bootcamp MVP that uses Gemini's native PDF document understanding. This avoids broken Arabic extraction from browser PDF text parsers and lets Gemini understand Arabic text, diagrams, tables, and page layout.
+Your Personal AI Academic Mentor
 
-## Run
+StudyPilot AI is an AI-powered learning platform designed to help university students understand, revise, and master their courses through intelligent AI agents.
 
-1. Copy `.env.example` to `.env` and add your Gemini API key.
-2. Install dependencies: `npm install`
-3. Terminal 1: `npm run server`
-4. Terminal 2: `npm run dev`
-5. Open `http://localhost:5173`
+---
 
-## MVP limits
+## ✨ Features
 
-- PDF files up to 25 MB.
-- The analysis prompt requests up to the first 30 pages to control latency and output size.
-- Course analyses are saved in browser LocalStorage; the PDF itself is not stored.
+- 🤖 Nova AI Tutor
+- 📄 PDF Lecture Analysis
+- 💬 Course Chat
+- 📝 Quiz Generator
+- 🗂 Flashcards
+- 📚 Study Plans
+- 📖 Bilingual Learning (Arabic & English)
+- 🌳 Learning Garden (Coming Soon)
+- 📊 Smart Dashboard (Coming Soon)
+
+---
+
+## 🛠 Tech Stack
+
+Frontend
+- React
+- Vite
+- JavaScript
+
+Backend
+- Node.js
+- Express
+
+AI
+- Google Gemini API
+
+Deployment
+- GitHub
+- Vercel
+
+---
+
+## 🚀 Roadmap
+
+✅ PDF Analysis
+
+✅ Nova Tutor
+
+✅ Course Chat
+
+🔄 Smart Dashboard
+
+🔄 Learning Garden
+
+🔄 Study Modes
+
+🔄 Firebase Authentication
+
+---
+
+## 📸 Screenshots
+
+(Add screenshots here)
+
+---
+
+## 👨‍💻 Developer
+
+Reman Hussam Ghawanni
+
+Taibah University
+
+Artificial Intelligence Student

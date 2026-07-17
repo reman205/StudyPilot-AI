@@ -1,3 +1,4 @@
+import Garden from "./pages/Garden";
 import { useEffect, useMemo, useState } from 'react';
 import {
   BookOpen, BrainCircuit, CheckCircle2, ChevronLeft, ChevronRight,
