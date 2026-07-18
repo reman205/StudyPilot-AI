@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useEffect, useMemo, useRef, useState } from 'react';import {
   AlertTriangle,
   ArrowRight,
   BookOpen,
@@ -13,6 +14,8 @@ import {
   Target,
   Trash2,
   User,
+  Copy,
+Check,
 } from 'lucide-react';
 
 import { askNovaAboutCourse } from '../../services/chatService';
@@ -114,7 +117,11 @@ export default function ChatPanel({ course, language = 'en' }) {
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [displayedText, setDisplayedText] = useState('');
+const [streamingId, setStreamingId] = useState(null);
   const [revealedAnswers, setRevealedAnswers] = useState({});
+  const [copiedMessageId, setCopiedMessageId] = useState(null);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     setMessages(safeReadMessages(storageKey, [welcomeMessage]));
@@ -124,6 +131,32 @@ export default function ChatPanel({ course, language = 'en' }) {
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(messages));
   }, [messages, storageKey]);
+  useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({
+    behavior: "smooth",
+  });
+}, [messages]);
+useEffect(() => {
+  if (!streamingId) return;
+
+  const message = messages.find((m) => m.id === streamingId);
+  if (!message?.text) return;
+
+  let index = 0;
+
+  const timer = setInterval(() => {
+    index++;
+
+    setDisplayedText(message.text.slice(0, index));
+
+    if (index >= message.text.length) {
+      clearInterval(timer);
+      setStreamingId(null);
+    }
+  }, 10);
+
+  return () => clearInterval(timer);
+}, [messages, streamingId]);
 
   async function sendMessage(customText) {
     const text = (customText ?? input).trim();
@@ -152,8 +185,10 @@ export default function ChatPanel({ course, language = 'en' }) {
         profile: getStoredProfile(),
       });
 
-      const assistantMessage = {
-  id: `nova-${Date.now()}`,
+      const assistantId = `nova-${Date.now()}`;
+
+const assistantMessage = {
+  id: assistantId,
   role: 'assistant',
   ...result,
   text:
@@ -168,8 +203,10 @@ export default function ChatPanel({ course, language = 'en' }) {
   createdAt: new Date().toISOString(),
 };
 
-      setMessages((current) => [...current, assistantMessage]);
-    } catch (error) {
+setMessages((current) => [...current, assistantMessage]);
+
+setStreamingId(assistantId);
+setDisplayedText('');    } catch (error) {
       setMessages((current) => [
         ...current,
         {
@@ -201,6 +238,32 @@ export default function ChatPanel({ course, language = 'en' }) {
       [messageId]: !current[messageId],
     }));
   }
+
+  async function copyMessage(message) {
+  const text =
+    message.text ||
+    [
+      message.mainIdea,
+      message.detailedExplanation,
+      message.example,
+      message.commonMistake,
+      message.examTip,
+      message.nextStep,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+  try {
+    await navigator.clipboard.writeText(text);
+    setCopiedMessageId(message.id);
+
+    setTimeout(() => {
+      setCopiedMessageId(null);
+    }, 1800);
+  } catch {
+    setCopiedMessageId(null);
+  }
+}
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -266,6 +329,24 @@ export default function ChatPanel({ course, language = 'en' }) {
                     ? 'أنتِ'
                     : 'You'}
               </strong>
+
+              {message.role === 'assistant' && !message.isError && (
+  <button
+    className="courseChatCopy"
+    type="button"
+    onClick={() => copyMessage(message)}
+    title={arabic ? 'نسخ الرد' : 'Copy response'}
+  >
+    {copiedMessageId === message.id ? <Check /> : <Copy />}
+    {copiedMessageId === message.id
+      ? arabic
+        ? 'تم النسخ'
+        : 'Copied'
+      : arabic
+        ? 'نسخ'
+        : 'Copy'}
+  </button>
+)}
 
               {message.isError ? (
                 <p className="courseChatError">{message.text}</p>
@@ -362,7 +443,11 @@ export default function ChatPanel({ course, language = 'en' }) {
                   </TutorSection>
                 </div>
               ) : (
-                <p>{message.text}</p>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+  {streamingId === message.id
+    ? displayedText
+    : message.text}
+</ReactMarkdown>
               )}
 
               {Array.isArray(message.sources) &&
@@ -419,6 +504,7 @@ export default function ChatPanel({ course, language = 'en' }) {
             </div>
           </article>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       <form className="courseChatComposer" onSubmit={handleSubmit}>
