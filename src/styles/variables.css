@@ -1,0 +1,46 @@
+:root{
+  font-family:Inter,Arial,sans-serif;
+  --bg:#f5efe7;
+  --surface:#fffdf9;
+  --soft:#f0e7dc;
+  --text:#302923;
+  --muted:#807267;
+  --border:#e6d9cc;
+  --primary:#a5673f;
+  --danger:#c45858;
+  --shadow:0 12px 35px rgba(91,65,46,.08)
+}
+:root[data-theme='dark']{
+  --bg:#0B1120;
+  --surface:#111827;
+  --soft:#1F2937;
+
+  --text:#F8FAFC;
+  --muted:#94A3B8;
+
+  --border:#334155;
+
+  /* StudyPilot Brand */
+  --primary:#C08A5B;
+
+  --danger:#EF4444;
+
+  --shadow:
+    0 12px 40px rgba(0,0,0,.35),
+    0 0 0 1px rgba(255,255,255,.02);
+}
+*{box-sizing:border-box}body{
+  margin:0;
+  min-width:320px;
+  min-height:100vh;
+
+  color:var(--text);
+
+  background:
+    radial-gradient(circle at 15% 20%,rgba(192,138,91,.08),transparent 28%),
+    radial-gradient(circle at 85% 15%,rgba(99,102,241,.05),transparent 22%),
+    radial-gradient(circle at 70% 80%,rgba(59,130,246,.04),transparent 24%),
+    var(--bg);
+
+  background-attachment:fixed;
+}

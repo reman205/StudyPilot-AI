@@ -1,14 +1,16 @@
+import Analytics from "./pages/Analytics";
 import Garden from "./pages/Garden";
 import { useEffect, useMemo, useState } from 'react';
 import {
   BookOpen, BrainCircuit, CheckCircle2, ChevronLeft, ChevronRight,
   FileText, GraduationCap, Home, Languages, LogOut, Moon, Play,
-  Plus, Settings, Sparkles, Sun, Upload, X,
+  Plus, Settings, Sparkles, Sun, Upload, X,Target,
 } from 'lucide-react';
 import { analyzePdf, getServerHealth } from './services/api';
 import Onboarding from './pages/Onboarding';
 import { clearProfile, getProfile } from './services/profileStorage';
 import ChatPanel from './components/chat/ChatPanel';
+import Dashboard from './pages/Dashboard';
 
 const copy = {
   en: {
@@ -88,36 +90,107 @@ export default function App() {
     <aside className="sidebar">
       <div className="brand"><div className="brandMark"><GraduationCap /></div><div><strong>StudyPilot AI</strong><small>Multi-Agent Learning System</small></div></div>
       <nav>
-        {[
-          ['dashboard', Home, t.dashboard], ['courses', BookOpen, t.courses], ['workspace', FileText, t.workspace],
-          ['agents', BrainCircuit, t.agents], ['settings', Settings, t.settings],
-        ].map(([id, Icon, label]) => <button key={id} disabled={id === 'workspace' && !active} className={page === id ? 'active' : ''} onClick={() => setPage(id)}><Icon />{label}</button>)}
-      </nav>
+  {[
+  ['dashboard', Home, t.dashboard],
+  ['courses', BookOpen, t.courses],
+  ['workspace', FileText, t.workspace],
+  ['analytics', Target, 'Analytics'],
+  ['garden', Home, 'Garden 🌱'],
+  ['agents', BrainCircuit, t.agents],
+  ['settings', Settings, t.settings],
+  ].map(([id, Icon, label]) => (
+    <button
+      key={id}
+      disabled={id === 'workspace' && !active}
+      className={page === id ? 'active' : ''}
+      onClick={() => setPage(id)}
+    >
+      <Icon />
+      {label}
+    </button>
+  ))}
+</nav>
       <div className="serverStatus"><span className={server.status === 'StudyPilot AI Server Running' ? 'online' : 'offline'} /><div><strong>Nova Server</strong><small>{server.status === 'StudyPilot AI Server Running' ? `${server.model} connected` : 'Offline'}</small></div></div>
     </aside>
     <main>
       <header className="topbar"><div><strong>{profile?.name || user}</strong><small>{profile?.major || 'AI Student'}{profile?.university ? ` • ${profile.university}` : ''}</small></div><div className="topActions"><select value={lang} onChange={(e) => setLang(e.target.value)}><option value="en">English</option><option value="ar">العربية</option></select><button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? <Moon /> : <Sun />}</button></div></header>
       <div className="content">
-        {page === 'dashboard' && <Dashboard t={t} user={profile?.name || user} courses={courses} active={active} readiness={readiness} onAdd={() => setModal(true)} onOpen={openCourse} />}
-        {page === 'courses' && <Courses t={t} courses={courses} onAdd={() => setModal(true)} onOpen={openCourse} />}
-        {page === 'workspace' && active && <Workspace t={t} course={active} index={slideIndex} setIndex={setSlideIndex} lang={lang} onDelete={() => removeCourse(active.id)} />}
-        {page === 'agents' && <Agents t={t} course={active} />}
-        {page === 'settings' && <SettingsPage t={t} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} onLogout={() => {
-          clearProfile();
-          localStorage.removeItem('spv3_user');
-          setProfile(null);
-          setUser('');
-        }} />}
+        {page === 'dashboard' && (
+  <Dashboard
+    t={t}
+    user={profile?.name || user}
+    courses={courses}
+    active={active}
+    readiness={readiness}
+    onAdd={() => setModal(true)}
+    onOpen={openCourse}
+  />
+)}
+
+{page === 'courses' && (
+  <Courses
+    t={t}
+    courses={courses}
+    onAdd={() => setModal(true)}
+    onOpen={openCourse}
+  />
+)}
+
+{page === 'workspace' && active && (
+  <Workspace
+    t={t}
+    course={active}
+    index={slideIndex}
+    setIndex={setSlideIndex}
+    lang={lang}
+    onDelete={() => removeCourse(active.id)}
+  />
+)}
+
+{page === 'analytics' && (
+  <Analytics
+    courses={courses}
+    active={active}
+    readiness={readiness}
+  />
+)}
+
+{page === 'garden' && (
+  <Garden
+    courses={courses}
+    active={active}
+    readiness={readiness}
+  />
+)}
+
+{page === 'agents' && (
+  <Agents
+    t={t}
+    course={active}
+  />
+)}
+
+{page === 'settings' && (
+  <SettingsPage
+    t={t}
+    lang={lang}
+    setLang={setLang}
+    theme={theme}
+    setTheme={setTheme}
+    onLogout={() => {
+      clearProfile();
+      localStorage.removeItem('spv3_user');
+      setProfile(null);
+      setUser('');
+    }}
+  />
+)}
       </div>
     </main>
     {modal && <UploadModal t={t} lang={lang} onClose={() => setModal(false)} onCreate={addCourse} />}
   </div>;
 }
 
-
-function Dashboard({ t, user, courses, active, readiness, onAdd, onOpen }) {
-  return <section className="stack"><div className="heading"><span className="eyebrow">Study workspace</span><h1>{t.welcome}, {user}</h1><p>{t.subtitle}</p></div><article className="hero"><div><span className="eyebrow">Nova Orchestrator</span><h2>{active?.name || t.noCourses}</h2><p>{active ? `${active.slides.length} ${t.slides}` : 'PDF → Nova → Agents → Learning package'}</p></div><button className="primary" onClick={active ? () => onOpen(active.id) : onAdd}>{active ? t.open : t.add}</button></article><div className="metrics"><Metric icon={<CheckCircle2 />} label="Exam readiness" value={`${readiness}%`} /><Metric icon={<BookOpen />} label="Active courses" value={courses.length} /><Metric icon={<BrainCircuit />} label="AI agents" value="6" /></div><div className="sectionTitle"><div><h2>{t.courses}</h2><p>Your analyzed lecture files.</p></div><button className="secondary" onClick={onAdd}><Plus />{t.add}</button></div>{courses.length ? <div className="courseGrid">{courses.map((course) => <CourseCard key={course.id} course={course} t={t} onOpen={onOpen} />)}</div> : <Empty t={t} onAdd={onAdd} />}</section>;
-}
 function Courses({ t, courses, onAdd, onOpen }) { return <section className="stack"><div className="heading row"><div><span className="eyebrow">Course library</span><h1>{t.courses}</h1><p>Upload lecture PDFs and let Gemini understand text, diagrams, tables, and Arabic content.</p></div><button className="primary" onClick={onAdd}><Upload />{t.add}</button></div>{courses.length ? <div className="courseGrid">{courses.map((course) => <CourseCard key={course.id} course={course} t={t} onOpen={onOpen} />)}</div> : <Empty t={t} onAdd={onAdd} />}</section>; }
 function Metric({ icon, label, value }) { return <article className="metric"><div>{icon}</div><span>{label}</span><strong>{value}</strong></article>; }
 function Empty({ t, onAdd }) { return <div className="empty"><Upload /><h2>{t.noCourses}</h2><button className="primary" onClick={onAdd}>{t.add}</button></div>; }

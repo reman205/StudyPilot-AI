@@ -1,0 +1,40 @@
+.novaSidebar{
+    width:260px;
+    background:var(--surface);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:20px;
+}
+
+.newChatBtn{
+    border:none;
+    cursor:pointer;
+    padding:14px;
+    border-radius:14px;
+    background:var(--primary);
+    color:white;
+    font-weight:600;
+    margin-bottom:24px;
+}
+
+.chatHistory{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.historyItem{
+    padding:14px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.historyItem:hover{
+    background:var(--soft);
+}
+
+.historyItem.active{
+    background:rgba(192,138,91,.18);
+}
