@@ -22,7 +22,8 @@ An AI-powered Multi-Agent Learning Platform for University Students
 - 📅 Personalized Study Plans
 - 📊 Analytics Dashboard
 - 🤖 Multi-Agent Architecture
-  
+
+  ---
 
 # 📖 Overview
 
