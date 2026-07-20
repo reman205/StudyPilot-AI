@@ -1,69 +1,217 @@
 # 🎓 StudyPilot AI
 
-> Your Personal Academic Mentor
+<div align="center">
 
-StudyPilot AI is a Multi-Agent AI-powered learning platform designed to help university students understand course materials faster and prepare effectively for exams.
+# Your Personal Academic Mentor
 
-## 🌐 Live Demo
+An AI-powered multi-agent learning platform that helps university students understand course materials, prepare for exams, and improve their academic performance through intelligent automation.
+
+🌐 **Live Demo:** https://study-pilot-ai-five.vercel.app/
+
+</div>
+
+---
+
+# 📖 Overview
+
+StudyPilot AI is a smart educational platform built to solve one of the biggest challenges university students face:
+
+> Understanding large amounts of lecture materials and preparing efficiently for exams.
+
+Instead of spending hours reading slides manually, students can upload their lecture notes and let multiple AI Agents analyze, explain, summarize, and generate personalized study resources.
+
+---
+
+# 🚨 Problem
+
+University students often struggle with:
+
+- Understanding difficult lecture materials
+- Spending too much time creating summaries
+- Preparing for exams efficiently
+- Tracking study progress
+- Organizing study plans
+
+---
+
+# 💡 Solution
+
+StudyPilot AI transforms uploaded lecture materials into an interactive learning experience using specialized AI Agents.
+
+Students can:
+
+- 📄 Upload lecture PDFs
+- 🧠 Generate AI summaries
+- 📝 Create quizzes automatically
+- 🎴 Generate flashcards
+- 📅 Receive personalized study plans
+- 📊 Track learning progress
+- 🌱 Stay motivated through gamification
+
+---
+
+# 🤖 Multi-Agent Architecture
+
+The platform uses multiple specialized AI Agents.
+
+| Agent | Responsibility |
+|--------|----------------|
+| 🧠 Nova | Personal AI Tutor |
+| 📄 Atlas | PDF Analysis |
+| ✨ Clarity | Smart Summarization |
+| 📝 Quanta | Quiz Generation |
+| 📅 Orbit | Study Planning |
+| 🛡️ Sentinel | Security & System Monitoring |
+
+Each agent performs a dedicated task, making the system faster, more modular, and easier to extend.
+
+---
+
+# 🔄 Workflow
+
+```
+Student
+
+↓
+
+Upload Lecture PDF
+
+↓
+
+Atlas analyzes document
+
+↓
+
+Clarity generates summary
+
+↓
+
+Nova explains concepts
+
+↓
+
+Quanta creates quizzes
+
+↓
+
+Orbit generates study plan
+
+↓
+
+Dashboard updates progress
+
+↓
+
+Student learns efficiently
+```
+
+---
+
+# ✨ Features
+
+- AI PDF Analysis
+- AI Tutor
+- Smart Summaries
+- Quiz Generator
+- Flashcards
+- Personalized Study Plans
+- Progress Dashboard
+- Learning Garden
+- Multi-Agent System
+- Modern Responsive UI
+
+---
+
+# 🖥️ Screenshots
+
+## Dashboard
+
+<img src="images/dashboard.png" width="900">
+
+---
+
+## AI Workspace
+
+<img src="images/ai-workspace.png" width="900">
+
+---
+
+## Quiz Generator
+
+<img src="images/quiz.png" width="900">
+
+---
+
+## Learning Garden
+
+<img src="images/garden.png" width="900">
+
+---
+
+## AI Agents
+
+<img src="images/agents.png" width="900">
+
+---
+
+# 🛠️ Technologies Used
+
+### Frontend
+
+- React
+- Vite
+- JavaScript
+- HTML5
+- CSS3
+
+### AI
+
+- Google Gemini API
+- Prompt Engineering
+- Multi-Agent Architecture
+
+### Development
+
+- Git
+- GitHub
+- Vercel
+- VS Code
+
+---
+
+# 🎯 Future Improvements
+
+- User Authentication
+- Cloud Database
+- Multi-device Synchronization
+- Mobile Application
+- Voice AI Tutor
+- Collaborative Learning
+- Analytics Dashboard
+- Learning Recommendations
+
+---
+
+# 🎥 Demo
+
+Live Website
 
 https://study-pilot-ai-five.vercel.app/
 
 ---
 
-## ✨ Features
-
-- 📄 AI PDF Analysis
-- 🤖 AI Mentor
-- 🧠 Smart Summaries
-- 📝 AI Quiz Generator
-- 🎴 Flashcards
-- 📅 Personalized Study Plans
-- 📊 Progress Dashboard
-- 🌱 Learning Garden
-- 🤖 Multi-Agent Architecture
-
----
-
-## 🤖 AI Agents
-
-- Nova — AI Mentor
-- Atlas — Document Analysis
-- Clarity — Summarization
-- Quanta — Quiz Generation
-- Orbit — Study Planning
-- Sentinel — Security & Monitoring
-
----
-
-## 🛠️ Tech Stack
-
-- React
-- Vite
-- JavaScript
-- HTML
-- CSS
-- Gemini API
-- GitHub
-- Vercel
-
----
-
-## 📸 Screenshots
-
-> Add screenshots from the `/images` folder.
-
----
-
-## 🚀 Future Improvements
-
-- User Authentication
-- Cloud Database
-- Mobile App
-- Multi-device Synchronization
-- AI Voice Tutor
-
----
-
-## 👨‍💻 Author
+# 👨‍💻 Author
 
 **Reman Hussam Ghawanni**
+
+Artificial Intelligence Student
+
+AI Agent Engineering Bootcamp
+
+Taibah University
+
+---
+
+# 📄 License
+
+This project was developed for educational purposes as the final project of the AI Agent Engineering Bootcamp.
