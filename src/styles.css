@@ -871,3 +871,22 @@ html[dir="rtl"] .sidebar nav button{
     padding:24px 14px;
   }
 }
+.securityNotice {
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--soft);
+}
+
+.securityNotice strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.securityNotice p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 14px;
+}
