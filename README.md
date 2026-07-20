@@ -125,34 +125,27 @@ Student learns efficiently
 # 🖥️ Screenshots
 
 ## Dashboard
-
-<img src="images/dashboard.png" width="900">
+![Dashboard](images/dashboard.png)
 
 ---
 
 ## AI Workspace
+![AI Workspace](images/ai-workspace.png)
 
-<img src="images/ai-workspace.png" width="900">
+---
+
+## PDF Analysis
+![PDF Analysis](images/analysis.png)
 
 ---
 
 ## Quiz Generator
-
-<img src="images/quiz.png" width="900">
-
----
-
-## Learning Garden
-
-<img src="images/garden.png" width="900">
+![Quiz Generator](images/quiz.png)
 
 ---
 
 ## AI Agents
-
-<img src="images/agents.png" width="900">
-
----
+![AI Agents](images/agents.png)
 
 # 🛠️ Technologies Used
 
