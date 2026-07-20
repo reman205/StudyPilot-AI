@@ -1,3 +1,27 @@
+<div align="center">
+
+# 🎓 StudyPilot AI
+
+### Your Personal Academic Mentor
+
+An AI-powered Multi-Agent Learning Platform for University Students
+
+🌐 **Live Demo:** https://study-pilot-ai-five.vercel.app/
+
+</div>
+
+---
+
+## 🚀 Features
+
+- 📄 AI PDF Analysis
+- 🤖 AI Tutor
+- 🧠 Smart Summaries
+- 📝 Quiz Generator
+- 🎴 Flashcards
+- 📅 Personalized Study Plans
+- 📊 Analytics Dashboard
+- 🤖 Multi-Agent Architecture
 # 🎓 StudyPilot AI
 
 <div align="center">
