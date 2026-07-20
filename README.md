@@ -1,73 +1,69 @@
 # 🎓 StudyPilot AI
 
-Your Personal AI Academic Mentor
+> Your Personal Academic Mentor
 
-StudyPilot AI is an AI-powered learning platform designed to help university students understand, revise, and master their courses through intelligent AI agents.
+StudyPilot AI is a Multi-Agent AI-powered learning platform designed to help university students understand course materials faster and prepare effectively for exams.
+
+## 🌐 Live Demo
+
+https://study-pilot-ai-five.vercel.app/
 
 ---
 
 ## ✨ Features
 
-- 🤖 Nova AI Tutor
-- 📄 PDF Lecture Analysis
-- 💬 Course Chat
-- 📝 Quiz Generator
-- 🗂 Flashcards
-- 📚 Study Plans
-- 📖 Bilingual Learning (Arabic & English)
-- 🌳 Learning Garden (Coming Soon)
-- 📊 Smart Dashboard (Coming Soon)
+- 📄 AI PDF Analysis
+- 🤖 AI Mentor
+- 🧠 Smart Summaries
+- 📝 AI Quiz Generator
+- 🎴 Flashcards
+- 📅 Personalized Study Plans
+- 📊 Progress Dashboard
+- 🌱 Learning Garden
+- 🤖 Multi-Agent Architecture
 
 ---
 
-## 🛠 Tech Stack
+## 🤖 AI Agents
 
-Frontend
+- Nova — AI Mentor
+- Atlas — Document Analysis
+- Clarity — Summarization
+- Quanta — Quiz Generation
+- Orbit — Study Planning
+- Sentinel — Security & Monitoring
+
+---
+
+## 🛠️ Tech Stack
+
 - React
 - Vite
 - JavaScript
-
-Backend
-- Node.js
-- Express
-
-AI
-- Google Gemini API
-
-Deployment
+- HTML
+- CSS
+- Gemini API
 - GitHub
 - Vercel
 
 ---
 
-## 🚀 Roadmap
-
-✅ PDF Analysis
-
-✅ Nova Tutor
-
-✅ Course Chat
-
-🔄 Smart Dashboard
-
-🔄 Learning Garden
-
-🔄 Study Modes
-
-🔄 Firebase Authentication
-
----
-
 ## 📸 Screenshots
 
-(Add screenshots here)
+> Add screenshots from the `/images` folder.
 
 ---
 
-## 👨‍💻 Developer
+## 🚀 Future Improvements
 
-Reman Hussam Ghawanni
+- User Authentication
+- Cloud Database
+- Mobile App
+- Multi-device Synchronization
+- AI Voice Tutor
 
-Taibah University
+---
 
-Artificial Intelligence Student
+## 👨‍💻 Author
+
+**Reman Hussam Ghawanni**
