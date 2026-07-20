@@ -22,19 +22,7 @@ An AI-powered Multi-Agent Learning Platform for University Students
 - 📅 Personalized Study Plans
 - 📊 Analytics Dashboard
 - 🤖 Multi-Agent Architecture
-# 🎓 StudyPilot AI
-
-<div align="center">
-
-# Your Personal Academic Mentor
-
-An AI-powered multi-agent learning platform that helps university students understand course materials, prepare for exams, and improve their academic performance through intelligent automation.
-
-🌐 **Live Demo:** https://study-pilot-ai-five.vercel.app/
-
-</div>
-
----
+  
 
 # 📖 Overview
 
